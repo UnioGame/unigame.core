@@ -33,8 +33,8 @@ namespace UniGame.Common
         public void Release()
         {
             isCompleted = true;
-            lifeTime    = null;
             lifeTime.Terminate();
+            lifeTime    = null;
         }
 
         public void Complete() => Release();
