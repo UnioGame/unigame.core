@@ -2,6 +2,7 @@ namespace UniModules.Runtime.Network
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Cysharp.Threading.Tasks;
     using UniCore.Runtime.ProfilerTools;
     using UnityEngine;
@@ -27,6 +28,34 @@ namespace UniModules.Runtime.Network
             }
             
             return result;
+        }
+
+        public static async UniTask<UrlResult> SelectFastestEndPoint(IEnumerable<string> urls, int tries, int timeout)
+        {
+            tries = Mathf.Max(1, tries);
+            
+            var checkTasks = Enumerable.Range(0, tries)
+                .Select(x => SelectFastestEndPoint(urls, timeout));
+            
+            var results = await UniTask.WhenAll(checkTasks);
+            var maxTime = float.MaxValue;
+            
+            var urlResult = new UrlResult()
+            {
+                success = false,
+                time = 0,
+                url = string.Empty,
+            };
+            
+            foreach (var checkResult in results)
+            {
+                if(checkResult.success == false) continue;
+                if (checkResult.time > maxTime) continue;
+                maxTime = checkResult.time;
+                urlResult = checkResult;
+            }
+
+            return urlResult;
         }
         
         public static async UniTask<UrlResult> SelectFastestEndPoint(IEnumerable<string> urls,int timeout = 5)
@@ -66,9 +95,10 @@ namespace UniModules.Runtime.Network
             resultDetection.time = totalTime;
             
 #if UNITY_EDITOR
-            GameLog.Log($"[{nameof(UrlChecker)}] URL = {url} Status = {result.success} \nWeb Error = {result.error}",
-                Color.red);
+            GameLog.Log($"[{nameof(UrlChecker)}] URL = {url} | Status = {result.success} | Time = {totalTime} \nWeb Error = {result.error}",
+                result.success ? Color.green : Color.red);
 #endif
+            
             resultDetection.success = result.success;
             return resultDetection;
 
