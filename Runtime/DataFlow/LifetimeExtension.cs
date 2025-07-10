@@ -186,7 +186,7 @@ public static class LifetimeExtension
     {
         if (lifeTime == null)
             return lifeTimeDefinition;
-        lifeTime.AddCleanUpAction(lifeTimeDefinition.Release);
+        lifeTime.AddCleanUpAction(lifeTimeDefinition.Terminate);
         return lifeTimeDefinition;
     }
     

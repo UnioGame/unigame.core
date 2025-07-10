@@ -64,6 +64,7 @@ namespace UniGame.DataFlow
         }
         
         public void Dispose() => _lifeTime.Terminate();
-        public void Release() => _lifeTime.Release();
+        
+        public void Release() => _lifeTime.Terminate();
     }
 }

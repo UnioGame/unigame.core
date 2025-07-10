@@ -77,7 +77,7 @@
         public AssetsPoolObject Initialize(GameObject objectAsset,ILifeTime lifeTime, int preloadCount = 0,Transform root = null)
         {
             _lifeTime ??= new LifeTime();
-            _lifeTime.Release();
+            _lifeTime.Restart();
             _lifeTime.AddCleanUpAction(OnDestroy);
 
             sourceName = objectAsset.name;

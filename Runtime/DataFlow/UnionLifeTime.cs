@@ -43,12 +43,8 @@ namespace UniGame.DataFlow
         public void Dispose()
         {
             Interlocked.Decrement(ref _counter);
-            
-            if (_counter > 0) {
-                return;
-            }
-            
-            _lifeTime.Release();
+            if (_counter > 0) return;
+            _lifeTime.Terminate();
         }
 
     }

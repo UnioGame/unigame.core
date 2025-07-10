@@ -1,12 +1,10 @@
 ﻿namespace UniGame.Core.Runtime
 {
-    using Runtime.DataFlow;
     using System;
     using System.Collections.Generic;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Cysharp.Threading.Tasks;
-    using global::UniGame.Core.Runtime;
     using UniGame.Runtime.DataFlow;
     using UnityEngine;
     using Object = UnityEngine.Object;
@@ -35,7 +33,7 @@
             if (assetLifeTimeHandles != null)
             {
                 foreach (var variableHandle in assetLifeTimeHandles)
-                    variableHandle.lifeTime?.Release();
+                    variableHandle.lifeTime?.Restart();
             }
             
             lifeTimeMap?.Clear();
@@ -98,7 +96,7 @@
                 space++;
                 
                 lifeTimeMap.Remove(handle.id);
-                handle.lifeTime.Release();
+                handle.lifeTime.Restart();
                 handle.asset = null;
                 handle.id = 0;
                 

@@ -1,6 +1,8 @@
 ﻿using UniCore.Runtime.ProfilerTools;
 using UniGame.Runtime.Extension;
 using UnityEngine;
+using UniGame.DataFlow;
+using UniGame.Core.Runtime;
 
 namespace UniGame.Runtime.DataFlow
 {
@@ -8,10 +10,8 @@ namespace UniGame.Runtime.DataFlow
     using System.Buffers;
     using System.Runtime.CompilerServices;
     using System.Threading;
-    using global::UniGame.DataFlow;
-    using global::UniGame.Core.Runtime;
+    using ObjectPool.Extensions;
 
-    
     public class LifeTime : ILifeTime, IDisposable
     {
         #region static data
@@ -27,7 +27,7 @@ namespace UniGame.Runtime.DataFlow
         static LifeTime()
         {
             var completedLifetime = new LifeTime();
-            completedLifetime.Release();
+            completedLifetime.Terminate();
             
             TerminatedLifetime = completedLifetime;
             
@@ -58,7 +58,7 @@ namespace UniGame.Runtime.DataFlow
                     break;
                 case LifeTimeReferenceType.TerminateLifeTime:
                     if(reference.reference is LifeTime relesedLifeTime)
-                        relesedLifeTime.Release();
+                        relesedLifeTime.Terminate();
                     break;
                 case LifeTimeReferenceType.RestartLifeTime:
                     if(reference.reference is LifeTime lifeTime)
@@ -90,7 +90,7 @@ namespace UniGame.Runtime.DataFlow
         {
             id = Unique.GetId();
         }
-        
+
         /// <summary>
         /// is lifetime terminated
         /// </summary>
@@ -133,7 +133,7 @@ namespace UniGame.Runtime.DataFlow
         public void AddChildLifeTime(LifeTime lifeTime)
         {
             if (isTerminated) {
-                lifeTime.Release();
+                lifeTime.Terminate();
                 return;
             }
             
@@ -143,7 +143,7 @@ namespace UniGame.Runtime.DataFlow
         public void AddChildRestartLifeTime(LifeTime lifeTime)
         {
             if (isTerminated) {
-                lifeTime.Release();
+                lifeTime.Restart();
                 return;
             }
             
@@ -216,21 +216,16 @@ namespace UniGame.Runtime.DataFlow
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Restart()
         {
-            Release();
+            Terminate();
             isTerminated = false;
         }
 
-        public void Dispose() => Release();
+        public void Dispose() => Terminate();
 
-        /// <summary>
-        /// method for backward compatibility
-        /// </summary>
-        public void Terminate() => Release();
-        
         /// <summary>
         /// invoke all cleanup actions
         /// </summary>
-        public void Release()
+        public void Terminate()
         {
             if (isTerminated) return;
             
@@ -274,13 +269,13 @@ namespace UniGame.Runtime.DataFlow
         {
             Application.quitting -= OnApplicationQuitting;
             Application.quitting += OnApplicationQuitting;
-            _editorLifeTime?.Release();
+            _editorLifeTime?.Restart();
         }
         
         public static void OnApplicationQuitting()
         {
             Application.quitting -= OnApplicationQuitting;
-            _editorLifeTime?.Release();
+            _editorLifeTime?.Restart();
         }
         
         #endif

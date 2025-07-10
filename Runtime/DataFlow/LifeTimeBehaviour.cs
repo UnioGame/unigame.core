@@ -6,7 +6,6 @@ namespace UniGame.DataFlow
     using System;
     using global::UniGame.Core.Runtime;
     using Runtime.DataFlow;
-    using UnityEngine.Serialization;
 
     public class LifeTimeBehaviour :
         MonoBehaviour, 
@@ -29,7 +28,7 @@ namespace UniGame.DataFlow
 
         private void OnEnable()
         {
-            _disableLifeTime.Release();
+            _disableLifeTime.Restart();
         }
 
         private void OnDisable()

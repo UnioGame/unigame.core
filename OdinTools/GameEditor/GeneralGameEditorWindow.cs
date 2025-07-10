@@ -15,7 +15,7 @@
         private TConfiguration _configuration;
         private HashSet<OdinMenuItem> _selectedItems = new();
         private List<IGameEditorCategory> _categories = new();
-        private LifeTime _lifeTimeDefinition = new();
+        private LifeTime _lifeTime = new();
         
         #endregion
 
@@ -39,8 +39,9 @@
         {
             base.Initialize();
             
-            _lifeTimeDefinition?.Release();
-            _lifeTimeDefinition = new LifeTime();
+            _lifeTime?.Terminate();
+            _lifeTime = new LifeTime();
+            
             var configuration = Configuration;
             configuration.UpdateAction -= Rebuild;
             configuration.UpdateAction += Rebuild;
@@ -142,7 +143,7 @@
         {
             base.OnDestroy();
             Configuration.UpdateAction -= Rebuild;
-            _lifeTimeDefinition.Release();
+            _lifeTime.Terminate();
         }
     }
 }

@@ -13,13 +13,13 @@
 
         public void Initialize(Action<ILifeTime> contextAction)
         {
-            _lifeTime.Release();
+            _lifeTime.Restart();
             _action = contextAction;
         }
 
         public void Execute()
         {
-            _lifeTime.Release();
+            _lifeTime.Restart();
             _action?.Invoke(_lifeTime);
         }
 
@@ -27,7 +27,7 @@
 
         public void Release()
         {
-            _lifeTime.Release();
+            _lifeTime.Terminate();
             _action = null;
         }
     }

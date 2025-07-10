@@ -22,7 +22,7 @@ namespace UniModules.Editor
 
         public ILifeTime LifeTime => _lifeTime;
         
-        public void Dispose() => _lifeTime.Release();
+        public void Dispose() => _lifeTime.Terminate();
 
         public SearchResultData AddKey(Object asset)
         {
@@ -42,6 +42,6 @@ namespace UniModules.Editor
             return this;
         }
 
-        public void Complete() => _lifeTime.Release();
+        public void Complete() => _lifeTime.Restart();
     }
 }

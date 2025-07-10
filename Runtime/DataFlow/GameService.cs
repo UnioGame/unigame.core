@@ -12,7 +12,7 @@
     {
         private readonly LifeTime _lifeTime = new();
 
-        public void Dispose() => _lifeTime.Release();
+        public void Dispose() => _lifeTime.Terminate();
 
         public ILifeTime LifeTime => _lifeTime;
     }

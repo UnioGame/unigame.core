@@ -30,7 +30,7 @@ namespace UniGame.DataFlow
         
         public void Release()
         {
-            _lifeTime.Release();
+            _lifeTime.Restart();
             _counter = 0;
         }
         
