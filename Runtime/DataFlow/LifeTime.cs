@@ -10,13 +10,15 @@ namespace UniGame.Runtime.DataFlow
     using System.Buffers;
     using System.Runtime.CompilerServices;
     using System.Threading;
-    using ObjectPool.Extensions;
+    using ObjectPool;
 
     public class LifeTime : ILifeTime, IDisposable
     {
         #region static data
 
         private static readonly LifeTime _editorLifeTime = new();
+        private static int poolCounter = 0;
+        private static int poolMaxLimit = 1000;
         
         public static readonly ILifeTime TerminatedLifetime;
         public static readonly int DefaultCapacity = 2;
@@ -36,7 +38,13 @@ namespace UniGame.Runtime.DataFlow
 
         public static LifeTime Create()
         {
-            return new LifeTime();
+            if (poolCounter <= 0) 
+                return new LifeTime();
+            
+            poolCounter--;
+            var lifeTime =  ClassPool.Spawn<LifeTime>();
+            lifeTime.Restart();
+            return lifeTime;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,6 +97,14 @@ namespace UniGame.Runtime.DataFlow
         public LifeTime()
         {
             id = Unique.GetId();
+        }
+
+        ~LifeTime()
+        {
+            if (poolCounter >= poolMaxLimit)
+                return;
+            ClassPool.Despawn(this);
+            poolCounter++;
         }
 
         /// <summary>
