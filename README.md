@@ -765,3 +765,59 @@ ENABLE_FIREBASE_CRASHLYTICS //define for enabling crashlytics support
 ```csharp
 GameLog.LogError("Some Error Message") //send error logs to firebase crashlytics if define is enabled
 ```
+
+# Editor Drawers
+
+you can see a demo asset with all drawers with menu:
+
+```csharp
+[CreateAssetMenu(menuName = "UniGame/Examples/Drawers/DemoDrawersAsset", fileName = "DemoDrawersAsset")]
+public class UniDrawersDemoAsset : ScriptableObject
+```
+
+## Value Dropdown
+
+![value-dropdown](https://i.ibb.co/zT1q3KCY/dr1.png)
+
+
+```csharp
+    [ValueDropdown(nameof(GetDropdownValues))]
+    public string valueDropdown = "Default Value";
+    
+    public IEnumerable<string> GetDropdownValues()
+    {
+        yield return "Default Value";
+        yield return "Value 1";
+        yield return "Value 2";
+    }
+    
+    [ValueDropdown(nameof(GetStaticDropdownValues))]
+    public string valueStaticDropdown = "Default Value";
+
+    public static IEnumerable<string> GetStaticDropdownValues()
+    {
+        yield return "STATIC 1";
+        yield return "STATIC 1";
+        yield return "STATIC 12";
+    }
+    
+    [ValueDropdown(nameof(GetDropdownIntValues))]
+    public string valueIntDropdown = "NONE";
+
+    public IEnumerable<int> GetDropdownIntValues()
+    {
+        yield return 1;
+        yield return 55;
+        yield return 66;
+    }
+    
+    [ValueDropdown(nameof(GetDropdownIntValues),label:"label")]
+    public string valueLabelDropdown = "NONE";
+    
+    public IEnumerable<DemoLabelValue> GetDropdownLabelValues()
+    {
+        yield return new DemoLabelValue(){ value = "", label = "label1"};
+        yield return new DemoLabelValue(){ value = "", label = "label2"};
+        yield return new DemoLabelValue(){ value = "", label = "label3"};
+    }
+```
