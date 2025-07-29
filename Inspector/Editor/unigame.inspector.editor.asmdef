@@ -1,0 +1,21 @@
+{
+    "name": "unigame.inspector.editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f3278a3da44d4fd6be6bbd6ef4010254",
+        "GUID:18e001e7783f9fa4f91ffb0f7d0ecfc5",
+        "GUID:343deaaf83e0cee4ca978e7df0b80d21",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

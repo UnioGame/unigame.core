@@ -1,4 +1,4 @@
-﻿namespace UniGame.Drawers
+﻿namespace UniGame.Inspector
 {
     using System;
     using UnityEngine;

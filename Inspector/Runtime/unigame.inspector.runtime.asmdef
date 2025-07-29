@@ -1,14 +1,12 @@
 {
-    "name": "unigame.unicore.drawers",
+    "name": "unigame.inspector.runtime",
     "rootNamespace": "",
     "references": [
         "GUID:18e001e7783f9fa4f91ffb0f7d0ecfc5",
         "GUID:343deaaf83e0cee4ca978e7df0b80d21",
         "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
