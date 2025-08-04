@@ -68,21 +68,6 @@ namespace UniModules.Editor
             return GetAssetImporters(string.Format("t:{0}", targetType.Name), folders, foldersOnly);
         }
 
-        public static List<string> GetAssetsPaths<T>(string[] folders = null) where T : Object
-        {
-            var assetsPaths = new List<string>();
-            var filter      = $"t:{typeof(T).Name}";
-            var ids         = AssetDatabase.FindAssets(filter, folders);
-
-            for (var i = 0; i < ids.Length; i++) {
-                var id   = ids[i];
-                var path = AssetDatabase.GUIDToAssetPath(id);
-                assetsPaths.Add(path);
-            }
-
-            return assetsPaths;
-        }
-
         #endregion
     }
 }

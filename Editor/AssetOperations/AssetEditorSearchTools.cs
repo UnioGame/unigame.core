@@ -67,13 +67,19 @@ namespace UniModules.Editor
                 ? AssetFilterGuidMap.GetValue((filter, folders))
                 : GetAssetFilterGuids(filter, folders);
         }
+        
+        public static void GetAssetsPaths(string filter, string[] folders, List<string> result)
+        {
+            var ids = GetAssetFilterGuids(filter, folders);
+            foreach (var id in ids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(id);
+                result.Add(path);
+            }
+        }
 
         public static string[] GetAssetFilterGuids(string filter,params string[] folders)
         {
-            // folders = folders.Where(value => !string.IsNullOrEmpty(value))
-            //     .Apply(folderName => folderName.TrimEndPath())
-            //     .ToArray();
-            
             var ids = folders is not { Length: > 0 }
                 ? AssetDatabase.FindAssets(filter)
                 : AssetDatabase.FindAssets(filter,folders);
@@ -200,6 +206,17 @@ namespace UniModules.Editor
             }
 
             return assets;
+        }
+        
+        public static void GetAssetsPaths(Type type, List<string> resultContainer, string[] folders = null)
+        {
+            var filter = GetTypeFilter(type);
+            var isComponent = type.IsComponent();
+            var filterType = isComponent ? UnityTypeExtension.gameObjectType : type;
+            var searchFilter = CreateFilter(filterType, filter);
+            var ids = GetAssetFilterGuids(searchFilter,folders,false);
+            
+            GetAssetsPaths(searchFilter, ids,resultContainer);
         }
 
         public static List<Object> GetAssets(

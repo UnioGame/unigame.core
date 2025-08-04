@@ -4,7 +4,7 @@
   "displayName": "UniGame Core Module",
   "description": "Base Tools Collection for Unity",
   "unity": "2023.2",
-  "version": "2025.0.18",
+  "version": "2025.0.19",
   "repository": {
     "type": "git",
     "url": "https://github.com/UnioGame/UniGame.Core"

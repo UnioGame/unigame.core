@@ -616,6 +616,7 @@
             return GetAssets<T>(targetType, folders,count);
         }
 
+
         public static EditorResource ToEditorResource(this Object asset, bool forceUpdate = false)
         {
             var editorResource = _editorResourceFactory(asset);
@@ -633,6 +634,34 @@
         {
             var items = GetAssets(targetType, folders,count);
             return items.OfType<T>().ToList();
+        }
+        
+        public static void GetAssetsPaths<T>(string[] folders ,List<string> result) where T : Object
+        {
+            var assetsPaths = result;
+            var filter      = $"t:{typeof(T).Name}";
+            var ids         = AssetDatabase.FindAssets(filter, folders);
+
+            for (var i = 0; i < ids.Length; i++) {
+                var id   = ids[i];
+                var path = AssetDatabase.GUIDToAssetPath(id);
+                assetsPaths.Add(path);
+            }
+        }
+        
+        public static List<string> GetAssetsPaths<T>(string[] folders = null) where T : Object
+        {
+            var assetsPaths = new List<string>();
+            var filter      = $"t:{typeof(T).Name}";
+            var ids         = AssetDatabase.FindAssets(filter, folders);
+
+            for (var i = 0; i < ids.Length; i++) {
+                var id   = ids[i];
+                var path = AssetDatabase.GUIDToAssetPath(id);
+                assetsPaths.Add(path);
+            }
+
+            return assetsPaths;
         }
 
         public static List<T> GetAssetsWithChilds<T>(string[] folders = null) where T : Object
