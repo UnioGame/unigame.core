@@ -3,6 +3,7 @@ namespace UniModules.Runtime.Network
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using Cysharp.Threading.Tasks;
     using UniCore.Runtime.ProfilerTools;
     using UnityEngine;
@@ -11,10 +12,12 @@ namespace UniModules.Runtime.Network
     {
         private static WebRequestBuilder _webRequestBuilder = new();
         
-        public static async UniTask<UrlCheckingResult> CheckEndPoints(IEnumerable<string> urls,int timeout = 5)
+        public static async UniTask<UrlCheckingResult> CheckEndPoints(IEnumerable<string> urls,int timeout = 5,CancellationToken cancellation = default)
         {
-            var urlTasks = urls.Select(x => TestUrlAsync(x,timeout));
-            var testResults = await UniTask.WhenAll(urlTasks);
+            var urlTasks = urls.Select(x => TestUrlAsync(x,timeout,cancellation));
+            var testResults = await UniTask.WhenAll(urlTasks)
+                .AttachExternalCancellation(cancellationToken:cancellation);
+            
             var maxTime = float.MaxValue;
             var result = new UrlCheckingResult();
             
@@ -58,10 +61,15 @@ namespace UniModules.Runtime.Network
             return urlResult;
         }
         
-        public static async UniTask<UrlResult> SelectFastestEndPoint(IEnumerable<string> urls,int timeout = 5)
+        public static async UniTask<UrlResult> SelectFastestEndPoint(
+            IEnumerable<string> urls,
+            int timeout = 5,
+            CancellationToken cancellation = default)
         {
-            var urlTasks = urls.Select(x => TestUrlAsync(x,timeout));
-            var testResults = await UniTask.WhenAll(urlTasks);
+            var urlTasks = urls.Select(x => TestUrlAsync(x,timeout,cancellation));
+            var testResults = await UniTask.WhenAll(urlTasks)
+                .AttachExternalCancellation(cancellation);
+            
             var maxTime = float.MaxValue;
             
             var result = new UrlResult()
@@ -81,7 +89,10 @@ namespace UniModules.Runtime.Network
             return result;
         }
 
-        public static async UniTask<UrlResult> TestUrlAsync(string url,int timeout = 5)
+        public static async UniTask<UrlResult> TestUrlAsync(
+            string url,
+            int timeout = 5,
+            CancellationToken cancellation = default)
         {
             var resultDetection = new UrlResult
             {
@@ -89,7 +100,7 @@ namespace UniModules.Runtime.Network
             };
             
             var startTime = Time.realtimeSinceStartup;
-            var result = await _webRequestBuilder.GetAsync(url,timeout:timeout);
+            var result = await _webRequestBuilder.GetAsync(url,timeout:timeout,cancellation:cancellation);
             
             var totalTime = (Time.realtimeSinceStartup - startTime) * 1000f;
             resultDetection.time = totalTime;

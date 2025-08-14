@@ -2,6 +2,7 @@ namespace UniModules.Runtime.Network
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using Cysharp.Threading.Tasks;
     using global::UniCore.Runtime.ProfilerTools;
     using UnityEngine;
@@ -53,13 +54,14 @@ namespace UniModules.Runtime.Network
             Dictionary<string, string> parameters = null,
             Dictionary<string, string> headers = null,
             int timeout = 0,
-            Action<UnityWebRequest> webRequestAction = null)
+            Action<UnityWebRequest> webRequestAction = null,
+            CancellationToken cancellation = default)
         {
             var webRequest = BuildGetRequest(url, parameters, headers,timeout);
             
             webRequestAction?.Invoke(webRequest);
             
-            return await SendRequestAsync(webRequest,typeof(string));
+            return await SendRequestAsync(webRequest,typeof(string),cancellation:cancellation);
         }
         
         public async UniTask<WebRequestResult> PostAsync(string url, WWWForm form)
@@ -314,12 +316,15 @@ namespace UniModules.Runtime.Network
             return serverUrl.MergeUrl(path);
         }
 
-        private async UniTask<WebRequestResult> SendRequestAsync(UnityWebRequest request,Type targetType)
+        private async UniTask<WebRequestResult> SendRequestAsync(
+            UnityWebRequest request,
+            Type targetType,
+            CancellationToken cancellation = default)
         {
             try
             {
                 var asyncOperation = request.SendWebRequest();
-                request = await asyncOperation.ToUniTask();
+                request = await asyncOperation.ToUniTask(cancellationToken:cancellation);
             }
             catch (Exception e)
             {
