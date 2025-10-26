@@ -150,8 +150,8 @@ namespace UniGame.Editor
 
             foreach (var type in types)
             {
-                // Пропускаем UnityEditor типы
-                if ((type.Namespace ?? string.Empty).StartsWith("UnityEditor", StringComparison.Ordinal))
+                // Пропускаем Editor типы
+                if (IsEditorNamespace(type.Namespace))
                     continue;
 
                 var typeFullName = type.FullName ?? type.Name;
@@ -216,7 +216,7 @@ namespace UniGame.Editor
                 {
                     foreach (var regex in regexPatterns)
                     {
-                        if (regex.IsMatch(typeFullName) || regex.IsMatch(type.Name))
+                        if (regex.IsMatch(typeFullName))
                         {
                             shouldInclude = true;
                             break;
@@ -305,6 +305,15 @@ namespace UniGame.Editor
             || asmName.Contains(".Editor.", StringComparison.Ordinal)
             || asmName.EndsWith(".EditorTests", StringComparison.Ordinal)
             || asmName.Equals("UnityEditor", StringComparison.Ordinal);
+    }
+
+    private static bool IsEditorNamespace(string namespaceName)
+    {
+        if (string.IsNullOrEmpty(namespaceName)) return false;
+        
+        return namespaceName.StartsWith("UnityEditor", StringComparison.Ordinal)
+            || namespaceName.Contains(".Editor.", StringComparison.Ordinal)
+            || namespaceName.EndsWith(".Editor", StringComparison.Ordinal);
     }
 
     private static void EnsureBaseLinkXml()
