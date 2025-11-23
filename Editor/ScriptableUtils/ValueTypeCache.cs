@@ -59,46 +59,30 @@ namespace UniGame.Core.Editor
 
         public static TAsset LoadAsset<TAsset>() where TAsset : ScriptableObject
         {
-            return LoadAsset<TAsset>(static x => Preload(x));
-        }
-
-        public static TAsset LoadAsset<TAsset>(Action<TAsset> callback) where TAsset : ScriptableObject
-        {
             var assetType = typeof(TAsset);
-            
-            return LoadAsset(assetType, x => callback?.Invoke(x as TAsset)) as TAsset;
+            var asset = LoadAsset(assetType) as TAsset;
+            return asset;
         }
         
-        public static ScriptableObject LoadAsset(Type assetType,Action<ScriptableObject> callback)
+        public static ScriptableObject LoadAsset(Type assetType)
         {
-            if (_initialized)
+            if (_assetCache.ContainsKey(assetType))
             {
-                if (_assetCache.ContainsKey(assetType))
-                {
-                    callback?.Invoke(_assetCache[assetType]);
-                }
-
-                var asset = LoadAssetInternal( assetType);
-                return asset;
+                return _assetCache[assetType];
             }
 
-            if (!_callbacks.TryGetValue(assetType, out var callbacks))
-            {
-                callbacks = new List<Action<ScriptableObject>>();
-                _callbacks[assetType] = callbacks;
-            }
-            
-            callbacks.Add(callback);
-            return null;
-        }
-
-        private static void Preload(ScriptableObject asset)
-        {
-            
+            var asset = LoadAssetInternal( assetType);
+            _assetCache[assetType] = asset;
+            return asset;
         }
         
         private static ScriptableObject LoadAssetInternal(Type targetType)
         {
+            if (_assetCache.TryGetValue(targetType, out var asset) && asset != null)
+            {
+                return asset;
+            }
+            
             var info = targetType.GetCustomAttribute<GeneratedAssetInfoAttribute>();
 
             var path = info == null || string.IsNullOrEmpty(info.Location) 
@@ -110,7 +94,9 @@ namespace UniGame.Core.Editor
             _pathCache[targetType] = path;
             
             var newAsset  = AssetEditorTools.LoadOrCreate<ScriptableObject>(targetType, path,targetType.Name);
-
+            
+            _assetCache[targetType] = newAsset;
+            
             if (!_callbacks.TryGetValue(targetType, out var callbacks)) 
                 return newAsset;
             
