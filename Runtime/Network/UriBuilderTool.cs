@@ -92,10 +92,10 @@
         
         public static UriBuilder GetUriBuilder(string url)
         {
-            if (_builders.TryGetValue(url, out var builder))
-                return builder;
+            // if (_builders.TryGetValue(url, out var builder))
+            //     return builder;
             
-            builder = new UriBuilder(url);
+            var builder = new UriBuilder(url);
             _builders[url] = builder;
             return builder;
         }
@@ -215,16 +215,20 @@
         public static string MergeUrl(this string serverUrl,string path)
         {
             var hash = HashCode.Combine(serverUrl, path);
-            if(_urlsCache.TryGetValue(hash, out var url))
+            if (_urlsCache.TryGetValue(hash, out var url))
                 return url;
 
             path = string.IsNullOrEmpty(path) ? string.Empty : path;
 
             var uriBuilder = GetUriBuilder(serverUrl);
-            uriBuilder.Path = path;
-            
+
+            var basePath = uriBuilder.Path?.TrimEnd('/') ?? "";
+            var appendPath = path.TrimStart('/');
+            uriBuilder.Path = $"{basePath}/{appendPath}";
+
             var result = uriBuilder.Uri.ToString();
             _urlsCache[hash] = result;
+
             return result;
         }
     }
