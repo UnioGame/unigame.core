@@ -5,6 +5,8 @@ namespace UniModules.Runtime.Network
     using System.Linq;
     using System.Threading;
     using Cysharp.Threading.Tasks;
+    using global::UniGame.Runtime.ObjectPool;
+    using global::UniGame.Runtime.ObjectPool.Extensions;
     using UniCore.Runtime.ProfilerTools;
     using UnityEngine;
 
@@ -66,8 +68,16 @@ namespace UniModules.Runtime.Network
             int timeout = 5,
             CancellationToken cancellation = default)
         {
-            var urlTasks = urls.Select(x => TestUrlAsync(x,timeout,cancellation));
-            var testResults = await UniTask.WhenAll(urlTasks)
+            var tasks = ClassPool.Spawn<List<UniTask<UrlResult>>>();
+            tasks.Clear();
+            
+            foreach (var url in urls)
+            {
+                var task = TestUrlAsync(url,timeout,cancellation);
+                tasks.Add(task);
+            }
+            
+            var testResults = await UniTask.WhenAll(tasks)
                 .AttachExternalCancellation(cancellation);
             
             var maxTime = float.MaxValue;
@@ -85,6 +95,9 @@ namespace UniModules.Runtime.Network
                 maxTime = urlResult.time;
                 result = urlResult;
             }
+            
+            tasks.Clear();
+            tasks.Despawn();
             
             return result;
         }
