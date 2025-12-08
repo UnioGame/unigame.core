@@ -333,6 +333,7 @@ namespace UniModules.Runtime.Network
                 success = isSuccessful,
                 data = resultData,
                 error = request.error,
+                responseCode = request.responseCode,
             };
             
             return webResult;
