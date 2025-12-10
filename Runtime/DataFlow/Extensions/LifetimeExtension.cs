@@ -264,12 +264,7 @@ public static class LifetimeExtension
             Bind(source).
             Bind(lifeTimes);
     }
-
-    public static ILifeTime ComposeCleanUp(
-        this ILifeTime source,
-        ILifeTime additional,
-        Action cleanup) => ComposeCleanUp(source, cleanup, additional);
-
+    
     public static bool IsTerminatedLifeTime(this ILifeTime lifeTime)
     {
         return lifeTime == null || lifeTime.IsTerminated || lifeTime == LifeTime.TerminatedLifetime;
@@ -334,36 +329,7 @@ public static class LifetimeExtension
         
         return mergedLifeTime;
     }
-    
-    /// <summary>
-    /// call release with first released lifetime
-    /// </summary>
-    public static ILifeTime ComposeCleanUp(
-        this ILifeTime source, 
-        Action cleanup,
-        params ILifeTime[] additional)
-    {
-        var composeAction = source.ComposeCleanUp(additional);
-        composeAction.AddCleanUpAction(cleanup);
-        
-        return source;
-    }
 
-    /// <summary>
-    /// call release with first released lifetime
-    /// </summary>
-    public static ILifeTime ComposeCleanUp(
-        this ILifeTime source, 
-        params ILifeTime[] additional)
-    {
-        var composeAction = new LifeTimeCompose();
-        
-        composeAction.Add(source);
-        composeAction.Add(additional);
-        
-        return composeAction;
-    }
-    
     #region type convertion
     
     public static CancellationToken AsCancellationToken(this ILifeTime lifeTime)
