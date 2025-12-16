@@ -22,18 +22,26 @@ namespace UniGame.Runtime.ObjectPool
             return PoolAsset.AttachToLifeTime(poolAsset.gameObject, lifeTime, createIfEmpty,preload);
         }
         
-        public static ILifeTime AttachToLifeTime(GameObject poolAsset, 
+        public static ILifeTime AttachToLifeTime(
+            GameObject poolAsset, 
             ILifeTime lifeTime, 
-            bool createIfEmpty = false,int preload = 0)
+            bool createIfEmpty = false,
+            int preload = 0)
         {
             return PoolAsset.AttachToLifeTime(poolAsset, lifeTime, createIfEmpty,preload);
         }
 
+        public static bool HasPool(this Object poolAsset)
+        {
+            var pool = PoolAsset.GetPool(poolAsset);
+            return pool != null;
+        }
+        
         public static bool HasCustomPoolLifeTime(this Object poolAsset)
         {
             var originLifeTime = PoolAsset.LifeTime;
             var pool = PoolAsset.GetPool(poolAsset);
-            return pool != null && pool.Owner != originLifeTime;
+            return pool != null && pool.owner != originLifeTime;
         }
         
         public static ILifeTime ApplyPoolAssetLifeTime(this ILifeTime lifeTime)

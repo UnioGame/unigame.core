@@ -320,12 +320,13 @@ namespace UniGame.Runtime.ObjectPool
             
             containerTransform.SetParent(_poolsRoot.transform,false);
             pool.Initialize(targetAsset,LifeTime,preloads,containerTransform);
-            pool.LifeTime.AddCleanUpAction(() => RemovePool(pool));
+            pool.lifeTime.AddCleanUpAction(() => RemovePool(pool));
 
             return pool;
             
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AssetsPoolObject GetPool(Object poolAsset)
         {
 #if UNITY_EDITOR
@@ -460,7 +461,7 @@ namespace UniGame.Runtime.ObjectPool
             _disposableAction?.Complete();
             
             var myPools = allSourceLinks
-                .Where(x => x.Value.Owner == LifeTime)
+                .Where(x => x.Value.owner == LifeTime)
                 .Select(x => x.Value)
                 .ToList();
             

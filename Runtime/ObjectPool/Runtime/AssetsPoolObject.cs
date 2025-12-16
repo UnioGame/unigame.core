@@ -2,8 +2,8 @@
 {
     using UniCore.Runtime.ProfilerTools;
     using UniGame.Core.Runtime.Extension;
-    using Runtime.Common;
-    using Runtime.DataFlow;
+    using Common;
+    using DataFlow;
     using System;
     using System.Buffers;
     using System.Collections.Generic;
@@ -18,10 +18,12 @@
     [Serializable]
     public class AssetsPoolObject
     {
+        public LifeTime lifeTime = new();
+        public GameObject gameObjectAsset;
+        public ILifeTime owner;
+        
         #region private properties
         
-        private LifeTime _lifeTime = new();
-        private GameObject _gameObjectAsset;
         private DisposableAction _disposableAction;
         
         #endregion
@@ -42,20 +44,20 @@
         // All the currently cached prefab instances
         public Stack<GameObject> Cache = new();
 
-        public ILifeTime Owner;
+        
 
-        public ILifeTime LifeTime => _lifeTime;
-
-        public AssetsPoolObject AttachLifeTime(ILifeTime lifeTime)
+        public AssetsPoolObject AttachLifeTime(ILifeTime newLifeTime)
         {
             //de-attach from current lifetime
             ResetParentLifeTime();
 
-            Owner = lifeTime;
+            owner = newLifeTime;
+            
             //bind new lifetime
-            _disposableAction = ClassPool.Spawn<DisposableAction>();
+            _disposableAction = new DisposableAction();
             _disposableAction.Initialize(Dispose);
-            Owner.AddDispose(_disposableAction);
+            
+            owner.AddDispose(_disposableAction);
             
             return this;
         }
@@ -66,29 +68,29 @@
             return this;
         }
 
-        public void Dispose() =>  _lifeTime.Terminate();
+        public void Dispose() =>  lifeTime.Terminate();
         
         
-        public AssetsPoolObject Initialize(Component objectAsset,ILifeTime lifeTime, int preloadCount = 0,Transform root = null)
+        public AssetsPoolObject Initialize(Component objectAsset,ILifeTime targetLifeTime, int preloadCount = 0,Transform root = null)
         {
-            return Initialize(objectAsset.gameObject,lifeTime,preloadCount,root);
+            return Initialize(objectAsset.gameObject,targetLifeTime,preloadCount,root);
         }
 
-        public AssetsPoolObject Initialize(GameObject objectAsset,ILifeTime lifeTime, int preloadCount = 0,Transform root = null)
+        public AssetsPoolObject Initialize(GameObject objectAsset,ILifeTime targetLifeTime, int preloadCount = 0,Transform root = null)
         {
-            _lifeTime ??= new LifeTime();
-            _lifeTime.Restart();
-            _lifeTime.AddCleanUpAction(OnDestroy);
+            lifeTime ??= new LifeTime();
+            lifeTime.Restart();
+            lifeTime.AddCleanUpAction(OnDestroy);
 
             sourceName = objectAsset.name;
             asset = objectAsset;
             preload = preloadCount;
             containerObject = root;
             
-            _gameObjectAsset = objectAsset;
+            gameObjectAsset = objectAsset;
 
             UpdatePreload();
-            AttachLifeTime(lifeTime);
+            AttachLifeTime(targetLifeTime);
             
             return this;
         }
@@ -164,9 +166,7 @@
             if (!clone) return;
             
             if (clone is IPoolable poolable)
-            {
                 poolable.Release();
-            }
 
             var target = clone.GetRootAsset() as GameObject;
             
@@ -183,7 +183,7 @@
         
         public void PreloadAsset()
         {
-            if (!_gameObjectAsset) return;
+            if (!gameObjectAsset) return;
             
             // Create clone
             var clone = CreateGameObject(Vector3.zero, Quaternion.identity, null);
@@ -274,7 +274,7 @@
         {
             _disposableAction?.Complete();
             
-            Owner = null;
+            owner = null;
 
             foreach (var item in Cache)
             {
@@ -311,7 +311,7 @@
         {
             if (!asset) return default;
             
-            var result = Object.Instantiate(_gameObjectAsset, position, rotation);
+            var result = Object.Instantiate(gameObjectAsset, position, rotation);
             var resultTransform = result.transform;
             if (resultTransform.parent != parent)
                 resultTransform.SetParent(parent, stayWorldPosition);
@@ -389,13 +389,13 @@
             Transform parent = null, 
             CancellationToken token = default)
         {
-            if (_gameObjectAsset == null) 
+            if (gameObjectAsset == null) 
                 return ObjectsItemResult.Empty;
             
             if(count <= 0) 
                 return ObjectsItemResult.Empty;
 
-            var operation =  Object.InstantiateAsync(_gameObjectAsset,
+            var operation =  Object.InstantiateAsync(gameObjectAsset,
                 count,parent, 
                 position, rotation,
                 token);
