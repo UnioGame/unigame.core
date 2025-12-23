@@ -11,6 +11,7 @@ namespace UniGame.Runtime.DataFlow
     using System.Runtime.CompilerServices;
     using System.Threading;
     using ObjectPool;
+    using ObjectPool.Extensions;
 
     public class LifeTime : ILifeTime, IDisposable
     {
@@ -64,15 +65,21 @@ namespace UniGame.Runtime.DataFlow
                     if(reference.reference is Action action)
                         action.Invoke();
                     break;
+                case LifeTimeReferenceType.SelfAction:
+                    if(reference.reference is ILIfeTimeAction lifeTimeAction)
+                        lifeTimeAction.Invoke();
+                    break;
                 case LifeTimeReferenceType.TerminateLifeTime:
-                    if(reference.reference is LifeTime relesedLifeTime)
-                        relesedLifeTime.Terminate();
+                    if(reference.reference is LifeTime releasedLifeTime)
+                        releasedLifeTime.Terminate();
                     break;
                 case LifeTimeReferenceType.RestartLifeTime:
                     if(reference.reference is LifeTime lifeTime)
                         lifeTime.Restart();
                     break;
             }
+
+            reference.reference = null;
         }
         
         #region type convertion
@@ -132,6 +139,28 @@ namespace UniGame.Runtime.DataFlow
         /// cleanup action, call when life time terminated
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ILifeTime AddCleanUpAction<T>(T source,Action<T> cleanAction) 
+        {
+            if (cleanAction == null) return this;
+            
+            //call cleanup immediate. lite time already ended
+            if (isTerminated) {
+                cleanAction.Invoke(source);
+                return this;
+            }
+            
+            var lifeTimeAction = ClassPool.Spawn<LifeTimeActionT<T>>();
+            lifeTimeAction.source = source;
+            lifeTimeAction.action = cleanAction;
+            
+            AddReference(lifeTimeAction, LifeTimeReferenceType.SelfAction);
+            return this;
+        }
+        
+        /// <summary>
+        /// cleanup action, call when life time terminated
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ILifeTime AddCleanUpAction(Action cleanAction) 
         {
             if (cleanAction == null) return this;
@@ -154,16 +183,6 @@ namespace UniGame.Runtime.DataFlow
             }
             
             AddReference(lifeTime, LifeTimeReferenceType.TerminateLifeTime);
-        }
-        
-        public void AddChildRestartLifeTime(LifeTime lifeTime)
-        {
-            if (isTerminated) {
-                lifeTime.Restart();
-                return;
-            }
-            
-            AddReference(lifeTime, LifeTimeReferenceType.RestartLifeTime);
         }
     
         /// <summary>
@@ -258,14 +277,16 @@ namespace UniGame.Runtime.DataFlow
 #if UNITY_EDITOR
                 try
                 {
+#endif
+                    
                     Release(ref dependencies[i]);
+                    
+#if UNITY_EDITOR
                 }
                 catch (Exception e)
                 {
                     GameLog.LogError(e);
                 }
-#else
-                Release(ref dependencies[i]);
 #endif
             }
             
@@ -297,7 +318,6 @@ namespace UniGame.Runtime.DataFlow
         #endif
 
     }
-
     
     [Serializable]
     public struct LifeTimeReference
@@ -314,6 +334,34 @@ namespace UniGame.Runtime.DataFlow
         Disposable,
         Action,
         TerminateLifeTime,
-        RestartLifeTime
+        RestartLifeTime,
+        SelfAction,
     }
+
+    internal class LifeTimeActionT<T> : ILIfeTimeAction
+    {
+        public T source;
+        public Action<T> action;
+        
+        public void Invoke()
+        {
+#if UNITY_EDITOR
+            if (action == null)
+            {
+                Debug.LogError($"LifeTimeActionT<{typeof(T).Name}> with source {source?.GetType().Name} = {source} action is null");
+            }
+#endif
+            action.Invoke(source);
+            action = null;
+            source = default;
+            
+            this.Despawn();
+        }
+    }
+    
+    public interface ILIfeTimeAction
+    {
+        void Invoke();
+    }
+    
 }
