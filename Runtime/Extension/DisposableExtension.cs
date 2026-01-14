@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
     using Common;
     using global::UniGame.Runtime.ObjectPool;
 
@@ -36,6 +37,7 @@
             return disposable;
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Cancel(this IDisposable disposable)
         {
             disposable?.Dispose();
