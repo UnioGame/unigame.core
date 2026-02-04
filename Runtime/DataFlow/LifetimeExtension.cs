@@ -81,14 +81,6 @@ public static class LifetimeExtension
         owner.AddCleanUpAction(lifeTime.Restart);
         return lifeTime;
     }
-        
-    public static IDisposableLifetime AddTo(this ILifeTime lifeTime, Action cleanupAction)
-    {
-        var disposableAction = ClassPool.Spawn<DisposableLifetime>();
-        disposableAction.AddCleanUpAction(cleanupAction);
-        lifeTime.AddDispose(disposableAction);
-        return disposableAction;
-    }
 
     public static T DestroyWith<T>(this T asset, ILifeTime lifeTime)
         where T : Object
@@ -220,14 +212,6 @@ public static class LifetimeExtension
     {
         context.LifeTime.AddDispose(action);
         return context;
-    }
-       
-    public static IComposedLifeTime Compose(this ILifeTime source, params  ILifeTime[] lifeTimes)
-    {
-        var composeAction = ClassPool.Spawn<ComposedLifeTime>();
-        return composeAction.
-            Bind(source).
-            Bind(lifeTimes);
     }
 
     public static bool IsTerminatedLifeTime(this ILifeTime lifeTime)

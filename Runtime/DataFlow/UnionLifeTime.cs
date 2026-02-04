@@ -12,7 +12,9 @@ namespace UniGame.DataFlow
         private LifeTime _lifeTime = new();
 
         #region lifetime api
-        
+
+        public ILifeTime AddCleanUpAction<T>(T source, Action<T> cleanAction) =>_lifeTime.AddCleanUpAction(source,cleanAction);
+
         public ILifeTime AddCleanUpAction(Action cleanAction) => _lifeTime.AddCleanUpAction(cleanAction);
 
         public ILifeTime AddDispose(IDisposable item) => _lifeTime.AddDispose(item);

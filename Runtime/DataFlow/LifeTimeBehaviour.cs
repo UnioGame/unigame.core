@@ -7,12 +7,12 @@ namespace UniGame.DataFlow
     using global::UniGame.Core.Runtime;
     using Runtime.DataFlow;
 
-    public class LifeTimeBehaviour :
-        MonoBehaviour, 
-        ILifeTime
+    public class LifeTimeBehaviour : MonoBehaviour, ILifeTime 
     {
         private readonly LifeTime _lifeTime = new();
         private readonly LifeTime _disableLifeTime = new();
+
+        public ILifeTime AddCleanUpAction<T>(T source, Action<T> cleanAction) => _lifeTime.AddCleanUpAction(source,cleanAction);
 
         public ILifeTime AddCleanUpAction(Action cleanAction) => _lifeTime.AddCleanUpAction(cleanAction);
 

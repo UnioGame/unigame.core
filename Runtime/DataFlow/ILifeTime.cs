@@ -7,6 +7,11 @@ namespace UniGame.Core.Runtime
     public interface ILifeTime
     {
         /// <summary>
+        /// cleanup with source object, call when life time terminated
+        /// </summary>
+        ILifeTime AddCleanUpAction<T>(T source, Action<T> cleanAction);
+        
+        /// <summary>
         /// cleanup action, call when life time terminated
         /// </summary>
         ILifeTime AddCleanUpAction(Action cleanAction);
