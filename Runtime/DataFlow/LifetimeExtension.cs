@@ -20,6 +20,8 @@ public static class LifetimeExtension
     public static async UniTask AwaitTimeoutLog(this ILifeTime lifeTime,TimeSpan timeOut,
         Func<string> message,LogType logType = LogType.Error)
     {
+        if (message == null) return;
+        
         var delay = timeOut.TotalMilliseconds;
         if (delay > 0) return;
 
@@ -43,14 +45,12 @@ public static class LifetimeExtension
                 GameLog.Log(logMessage);
                 break;
         }
-        
-        GameLog.Log(message?.Invoke());
     }
     
     public static ILifeTime DestroyWith(this ILifeTime lifeTime, GameObject gameObject)
     {
         if (!gameObject) return lifeTime;
-        DestroyWith(gameObject,lifeTime);
+        gameObject.DestroyWith(lifeTime);
         return lifeTime;
     }
     
@@ -58,7 +58,13 @@ public static class LifetimeExtension
     {
         return lifeTimeContext.LifeTime.AddTo(action,cancellationAction);
     }
-    
+
+    public static ILifeTime AddTo(this LifeTime lifeTime, Action action, Action cancellationAction)
+    {
+        var lifeTimeApi = lifeTime as ILifeTime;
+        return lifeTimeApi.AddTo(action,cancellationAction);
+    }
+
     public static ILifeTime AddTo(this ILifeTime lifeTime,Action action,Action cancellationAction)
     {
         if (lifeTime.IsTerminated) return lifeTime;
@@ -67,9 +73,15 @@ public static class LifetimeExtension
         lifeTime.AddCleanUpAction(cancellationAction);
         return lifeTime;
     }
-    
-    public static T AddTo<T>(this T disposable, ILifeTime lifeTime)
-        where T : IDisposable
+
+    public static T AddTo<T>(this T disposable, LifeTime lifeTime) where T : IDisposable
+    {
+        if (disposable != null)
+            lifeTime.AddDispose(disposable);
+        return disposable;
+    }
+
+    public static T AddTo<T>(this T disposable, ILifeTime lifeTime) where T : IDisposable
     {
         if (disposable != null)
             lifeTime.AddDispose(disposable);
@@ -133,14 +145,14 @@ public static class LifetimeExtension
     public static Object DestroyAssetWith(Object asset, ILifeTime lifeTime)
     {
         if (!asset) return asset;
-        lifeTime.AddCleanUpAction(() => CheckDestroy(asset));
+        lifeTime.AddCleanUpAction(asset,CheckDestroy);
         return asset;
     }
 
     public static GameObject DestroyObjectWith(GameObject gameObject, ILifeTime lifeTime)
     {
         if (!gameObject) return gameObject;
-        lifeTime.AddCleanUpAction(() => CheckDestroy(gameObject));
+        lifeTime.AddCleanUpAction(gameObject,CheckDestroy);
         return gameObject;
     }
 
@@ -153,14 +165,14 @@ public static class LifetimeExtension
     public static ILifeTime DestroyWith(this ILifeTime lifeTime, Component component)
     {
         if (!component) return lifeTime;
-        lifeTime.AddCleanUpAction(() =>  Despawn(component.gameObject,true));
+        lifeTime.AddCleanUpAction(component,static x =>  Despawn(x.gameObject,true));
         return lifeTime;
     }
     
     public static ILifeTime DespawnWith(this ILifeTime lifeTime, GameObject gameObject)
     {
         if (!gameObject) return lifeTime;
-        lifeTime.AddCleanUpAction(() => Despawn(gameObject,false));
+        lifeTime.AddCleanUpAction(gameObject,static x => Despawn(x,false));
         return lifeTime;
     }
 
@@ -176,8 +188,7 @@ public static class LifetimeExtension
     
     public static LifeTime ReleaseWith(this LifeTime lifeTimeDefinition, ILifeTime lifeTime)
     {
-        if (lifeTime == null)
-            return lifeTimeDefinition;
+        if (lifeTime == null) return lifeTimeDefinition;
         lifeTime.AddCleanUpAction(lifeTimeDefinition.Terminate);
         return lifeTimeDefinition;
     }
