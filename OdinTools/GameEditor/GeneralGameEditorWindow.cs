@@ -6,6 +6,8 @@
     using Categories;
     using global::UniGame.Runtime.DataFlow;
     using global::UniGame.Core.Editor;
+    using System.Collections;
+    using Unity.EditorCoroutines.Editor;
 
     public class GeneralGameEditorWindow<TConfiguration> : OdinMenuEditorWindow
         where TConfiguration : BaseEditorConfiguration
@@ -46,8 +48,7 @@
             configuration.UpdateAction -= Rebuild;
             configuration.UpdateAction += Rebuild;
 
-            Rebuild();
-            Rebuild();
+            EditorCoroutineUtility.StartCoroutine(DelayedRebuild(),this);
         }
         
         protected override OdinMenuTree BuildMenuTree()
@@ -144,6 +145,12 @@
             base.OnDestroy();
             Configuration.UpdateAction -= Rebuild;
             _lifeTime.Terminate();
+        }
+
+        private IEnumerator DelayedRebuild()
+        {
+            yield return null;
+            Rebuild();
         }
     }
 }
