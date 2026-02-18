@@ -88,10 +88,13 @@ public static class LifetimeExtension
         return disposable;
     }
     
-    public static LifeTime RestartWith(this LifeTime lifeTime, ILifeTime owner)
+    /// <summary>
+    /// restart lifetime when owner restarted
+    /// </summary>
+    public static LifeTime RestartWith(this LifeTime target, ILifeTime owner)
     {
-        owner.AddCleanUpAction(lifeTime.Restart);
-        return lifeTime;
+        owner.AddCleanUpAction(target.Restart);
+        return target;
     }
 
     public static T DestroyWith<T>(this T asset, ILifeTime lifeTime)
