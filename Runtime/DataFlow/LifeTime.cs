@@ -318,7 +318,7 @@ namespace UniGame.Runtime.DataFlow
         #endif
 
     }
-    
+
     [Serializable]
     public struct LifeTimeReference
     {
