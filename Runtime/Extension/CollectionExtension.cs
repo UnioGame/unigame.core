@@ -11,6 +11,7 @@ namespace UniGame.Core.Runtime.Extension
     {
         public static T GetRandomValue<T>(this IReadOnlyList<T> list)
         {
+            if (list.Count == 0) return default;
             var randomIndex = Random.Range(0, list.Count);
             return list[randomIndex];
         }
