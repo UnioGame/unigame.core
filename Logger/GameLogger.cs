@@ -7,7 +7,7 @@
     using Debug = UnityEngine.Debug;
     using Object = UnityEngine.Object;
     
-#if ENABLE_FIREBASE_CRASHLYTICS
+#if ENABLE_CRASHLYTICS_GAMELOG
     using Firebase.Crashlytics;
 #endif
 
@@ -37,18 +37,13 @@
         public void Log(string message, Object source = null)
         {
 #if UNITY_EDITOR || GAME_LOGS_ENABLED || DEBUG
-
             LogRuntime(message, source);
-
 #endif
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LogImportant(string message)
         {
-#if ENABLE_FIREBASE_CRASHLYTICS
-            Crashlytics.Log(message);
-#endif
             LogRuntime(message);
         }
 
@@ -149,8 +144,9 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LogException(Exception e)
         {
-#if ENABLE_FIREBASE_CRASHLYTICS
-            Crashlytics.LogException(e);
+#if ENABLE_CRASHLYTICS_GAMELOG
+            if(Crashlytics.IsCrashlyticsCollectionEnabled)
+                Crashlytics.LogException(e);
 #endif
             Debug.LogException(e);
         }
@@ -158,11 +154,12 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LogError(string message, Object source = null)
         {
-#if ENABLE_FIREBASE_CRASHLYTICS
-            Crashlytics.Log($"ERROR: {message}");
+#if ENABLE_CRASHLYTICS_GAMELOG
+            if(Crashlytics.IsCrashlyticsCollectionEnabled)
+                Crashlytics.Log($"ERROR: {message}");
 #endif
-            
-            if (source) {
+            if (source) 
+            {
                 Debug.LogError(message, source);
                 return;
             }
