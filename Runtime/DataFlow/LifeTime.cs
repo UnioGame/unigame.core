@@ -79,6 +79,7 @@ namespace UniGame.Runtime.DataFlow
                     break;
             }
 
+            reference.type = LifeTimeReferenceType.None;
             reference.reference = null;
         }
         
@@ -290,8 +291,18 @@ namespace UniGame.Runtime.DataFlow
 #endif
             }
             
+#if UNITY_EDITOR
+            try
+            {
+#endif
             Release(ref signleReference);
-            
+#if UNITY_EDITOR
+            }
+            catch (Exception e)
+            {
+                GameLog.LogError(e);
+            }
+#endif
             if(dependencies.Length > 0)
                 ReferencePool.Return(dependencies);
             
