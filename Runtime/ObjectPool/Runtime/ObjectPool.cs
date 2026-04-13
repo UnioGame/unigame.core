@@ -4,18 +4,49 @@ using UnityEngine;
 
 namespace UniGame.Runtime.ObjectPool
 {
+    using System.Collections.Generic;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Cysharp.Threading.Tasks;
 
     public static class ObjectPool
     {
-
+        private static List<AssetsPoolObject> _pools = new();
+        
         public static ObjectPoolAsset activePool;
-
+        
         public static ObjectPoolAsset PoolAsset => GetPool();
 
-        public static ILifeTime AttachToLifeTime(Component poolAsset, 
+        public static AssetsPoolObject GetPoolByTag(string tagValue)
+        {
+            return PoolAsset.GetPoolByTag(tagValue);
+        }
+                
+        public static bool LinkPoolTag(this Object asset, string tagValue)
+        {
+            return PoolAsset.LinkPoolTag(asset, tagValue);
+        }
+        
+        public static bool UnlinkPoolTag(string tagValue)
+        {
+            return PoolAsset.UnlinkPoolTag(tagValue);
+        }
+        
+        public static AssetsPoolObject GetPoolOrCreate(Object prototype,int preload)
+        {
+            var component = prototype as Component;
+            var protoObject = component != null ? component.gameObject : prototype as  GameObject;
+            if(protoObject == null) return null;
+            
+            var poolObject = PoolAsset;
+            if(poolObject.TryGetPool(prototype, out var pool)) return pool;
+            
+            pool = poolObject.CreatePool(protoObject, preload);
+            return pool;
+        }
+        
+        public static ILifeTime AttachToLifeTime(
+            Component poolAsset, 
             ILifeTime lifeTime, 
             bool createIfEmpty = false,int preload = 0)
         {
@@ -133,14 +164,32 @@ namespace UniGame.Runtime.ObjectPool
             PoolAsset.CreatePool(targetPrefab.gameObject,preloads);
         }
         
-        public static void CreatePool(GameObject targetPrefab, int preloads = 0)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CreatePool(GameObject targetPrefab, int preloads = 0)
         {
-            PoolAsset.CreatePool(targetPrefab,preloads);
+            var pool = PoolAsset.CreatePool(targetPrefab,preloads);
+            return pool != null;
         }
 
         public static  void DestroyPool(Object poolAsset)
         {
             PoolAsset.DestroyPool(poolAsset);
+        }
+        
+        public static void DestroyPoolByTag(string tagValue)
+        {
+            var pool = PoolAsset.GetPoolByTag(tagValue);
+            if (pool == null) return;
+            DestroyPool(pool.asset);
+        }
+        
+        public static  void DestroyAllPools()
+        {
+            _pools.Clear();
+            _pools.AddRange(ObjectPoolAsset.pools.Values);
+            foreach (var poolObject in _pools)
+                poolObject.Dispose();
+            _pools.Clear();
         }
         
         // This allows you to despawn a clone via GameObject, with optional delay
@@ -155,6 +204,7 @@ namespace UniGame.Runtime.ObjectPool
             PoolAsset.RemoveFromPool(target);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ObjectPoolAsset GetPool()
         {
             if (activePool) return activePool;

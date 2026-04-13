@@ -16,7 +16,7 @@
     using Object = UnityEngine.Object;
     
     [Serializable]
-    public class AssetsPoolObject
+    public class AssetsPoolObject : ILifeTimeContext
     {
         public LifeTime lifeTime = new();
         public GameObject gameObjectAsset;
@@ -43,9 +43,9 @@
 
         // All the currently cached prefab instances
         public Stack<GameObject> Cache = new();
-
         
-
+        public ILifeTime LifeTime => lifeTime;
+        
         public AssetsPoolObject AttachLifeTime(ILifeTime newLifeTime)
         {
             //de-attach from current lifetime
@@ -449,5 +449,6 @@
 #endif
         }
         #endregion
+
     }
 }

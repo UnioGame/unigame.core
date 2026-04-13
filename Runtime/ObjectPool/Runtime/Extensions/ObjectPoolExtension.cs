@@ -11,9 +11,9 @@ namespace UniGame.Runtime.ObjectPool.Extensions
 
     public static class ObjectPoolExtension
     {
-        public static void CreatePool(this GameObject asset, int preloadCount = 0)
+        public static bool CreatePool(this GameObject asset, int preloadCount = 0)
         {
-            ObjectPool.CreatePool(asset,preloadCount);
+            return ObjectPool.CreatePool(asset,preloadCount);
         }
         
         public static TComponent Spawn<TComponent>(this GameObject prototype)
@@ -99,6 +99,7 @@ namespace UniGame.Runtime.ObjectPool.Extensions
         {
             return ObjectPool.AttachToLifeTime(prototype, lifeTime,createPoolIfNone,preload);
         }
+
                 
         public static GameObject Spawn(this GameObject source, ILifeTime lifeTime, int preload = 0)
         {
@@ -131,8 +132,7 @@ namespace UniGame.Runtime.ObjectPool.Extensions
             bool setActive = true)
         {
             if (!prototype) return null;
-            var pawn = Spawn(prototype,setActive, position, 
-                rotation, parent, stayWorldPosition);
+            var pawn = Spawn(prototype,setActive, position, rotation, parent, stayWorldPosition);
             return pawn;
         }
 

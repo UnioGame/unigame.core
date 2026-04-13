@@ -36,6 +36,24 @@ namespace UniGame.Core.Runtime.Extension
             return map;
         }
         
+        public static IDictionary<TKey,TValue> RemoveAll<TKey,TValue,TData>(this IDictionary<TKey,TValue> map,TData data,
+            Func<TKey,TValue,TData,bool> predicate)
+        {
+            var removedItems = ClassPool.Spawn<List<TKey>>();
+            
+            foreach (var item in map)
+            {
+                var key = item.Key;
+                if(predicate(item.Key,item.Value,data))
+                    removedItems.Add(key);
+            }
+
+            foreach (var removedItem in removedItems)
+                map.Remove(removedItem); 
+            
+            removedItems.Despawn();
+            return map;
+        }
         
         public static IDictionary<TKey,TValue> RemoveAll<TKey,TValue>(this IDictionary<TKey,TValue> map,Func<TKey,TValue,bool> predicate)
         {

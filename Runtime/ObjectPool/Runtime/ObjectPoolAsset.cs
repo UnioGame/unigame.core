@@ -32,22 +32,24 @@ namespace UniGame.Runtime.ObjectPool
         private const int DefaultBufferSuze = 128;
         
         // The reference between a spawned GameObject and its pool
-        public static readonly Dictionary<Object, AssetsPoolObject> allCloneLinks = new(DefaultBufferSuze);
-        
+        public static readonly Dictionary<Object, AssetsPoolObject> cloneLinks = new(DefaultBufferSuze);
         //The reference between a spawned source GameObject and its pool
-        public static Dictionary<Object, AssetsPoolObject> allSourceLinks = new(DefaultBufferSuze);
-
+        public static Dictionary<Object, AssetsPoolObject> pools = new(DefaultBufferSuze);
+        //list from custom tag to pool object
+        public static readonly Dictionary<string,AssetsPoolObject> poolTags = new(DefaultBufferSuze);
+        
         private static void RemovePool(AssetsPoolObject poolObject)
         {
-            allCloneLinks.RemoveWithValue(poolObject);
-            allSourceLinks.Remove(poolObject.asset);
+            cloneLinks.RemoveWithValue(poolObject);
+            pools.Remove(poolObject.asset);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void OnReset()
         {
-            allCloneLinks.Clear();
-            allSourceLinks.Clear();
+            cloneLinks.Clear();
+            pools.Clear();
+            poolTags.Clear();
         }
 
         #endregion
@@ -57,6 +59,25 @@ namespace UniGame.Runtime.ObjectPool
         public ILifeTime LifeTime => _lifeTime;
         
         #endregion
+
+        public AssetsPoolObject GetPoolByTag(string tagValue)
+        {
+            var pool =  poolTags.GetValueOrDefault(tagValue);
+            if (pool == null || pool.lifeTime.isTerminated) return null;
+            return pool;
+        }
+        
+        public bool LinkPoolTag(Object asset, string tagValue)
+        {
+            if(!pools.TryGetValue(asset, out var pool)) return false;
+            poolTags[tagValue] = pool;
+            return true;
+        }
+        
+        public bool UnlinkPoolTag(string tagValue)
+        {
+            return poolTags.Remove(tagValue);
+        }
         
         public ILifeTime AttachToLifeTime(ILifeTime lifeTime)
         {
@@ -224,7 +245,7 @@ namespace UniGame.Runtime.ObjectPool
             // Spawn a clone from this pool
             var clone = pool.Spawn(position, rotation, parent,stayWorld, setActive);
 
-            allCloneLinks[clone] = pool;
+            cloneLinks[clone] = pool;
             
             return clone;
         }
@@ -264,7 +285,7 @@ namespace UniGame.Runtime.ObjectPool
             // Spawn a clone from this pool
             var clone = pool.Spawn(position, rotation, parent,stayWorld, setActive);
             
-            allCloneLinks[clone] = pool;
+            cloneLinks[clone] = pool;
             return clone;
         }
         
@@ -284,7 +305,7 @@ namespace UniGame.Runtime.ObjectPool
         {
             return CreatePool(targetAsset.gameObject, preloads);
         }
-
+        
         public AssetsPoolObject CreatePool(GameObject targetAsset, int preloads = 0)
         {
 #if UNITY_EDITOR
@@ -293,21 +314,17 @@ namespace UniGame.Runtime.ObjectPool
             if (!targetAsset) return null;
 
             // Find the pool that handles this prefab
-            if (allSourceLinks.TryGetValue(targetAsset, out var pool))
+            if (pools.TryGetValue(targetAsset, out var pool))
             {
                 var preloadCount = preloads - pool.Cache.Count;
                 for (var i = 0; i < preloadCount; i++)
-                {
                     pool.PreloadAsset();
-                }
                 return pool;
             }
             
             //create root
             if (!_poolsRoot)
-            {
                 _poolsRoot = new GameObject(RootObjectName);
-            }
 
             // Create a new pool for this prefab?
             var container = new GameObject(targetAsset.name);
@@ -316,14 +333,19 @@ namespace UniGame.Runtime.ObjectPool
             containerTransform.SetParent(ObjectPoolData.RootContainer.transform);
             
             pool = new AssetsPoolObject();
-            allSourceLinks.Add(targetAsset, pool);
+            pools.Add(targetAsset, pool);
             
             containerTransform.SetParent(_poolsRoot.transform,false);
             pool.Initialize(targetAsset,LifeTime,preloads,containerTransform);
-            pool.lifeTime.AddCleanUpAction(() => RemovePool(pool));
+            pool.lifeTime.AddCleanUpAction(pool,static x => RemovePool(x));
 
             return pool;
-            
+        }
+
+        public bool TryGetPool(Object poolAsset, out AssetsPoolObject pool)
+        {
+            pool = GetPool(poolAsset);
+            return pool != null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -340,10 +362,10 @@ namespace UniGame.Runtime.ObjectPool
             }
 #endif
             
-            if (allSourceLinks.TryGetValue(poolAsset, out var pool))
+            if (pools.TryGetValue(poolAsset, out var pool))
                 return pool;
             
-            return allCloneLinks.GetValueOrDefault(poolAsset);
+            return cloneLinks.GetValueOrDefault(poolAsset);
         }
         
         public void DestroyPool(Object poolAsset)
@@ -351,7 +373,9 @@ namespace UniGame.Runtime.ObjectPool
             if (!poolAsset) return;
 
             // Try and find the pool associated with this clone
-            if (!allSourceLinks.TryGetValue(poolAsset, out var pool)) return;
+            if (!pools.TryGetValue(poolAsset, out var pool)) return;
+
+            poolTags.RemoveAll(pool,static (x,y,z) => y == z);
             
             // Despawn it
             pool.Dispose();
@@ -368,7 +392,7 @@ namespace UniGame.Runtime.ObjectPool
             var clone = asset.GetRootAsset();
             
             // Try and find the pool associated with this clone
-            if (!allCloneLinks.TryGetValue(clone, out var pool))
+            if (!cloneLinks.TryGetValue(clone, out var pool))
             {
                 Destroy(clone);
                 return;
@@ -378,16 +402,16 @@ namespace UniGame.Runtime.ObjectPool
                 poolable.Release();
 
             // Remove the association
-            allCloneLinks.Remove(clone);
+            cloneLinks.Remove(clone);
             // Despawn it
             pool.Despawn(clone, destroy);
         }
 
         public void RemoveFromPool(GameObject target)
         {
-            if (!allCloneLinks.TryGetValue(target, out var pool)) return;
+            if (!cloneLinks.TryGetValue(target, out var pool)) return;
             // Remove the association
-            allCloneLinks.Remove(target);
+            cloneLinks.Remove(target);
         }
         
         public async UniTask<ObjectsItemResult> SpawnAsync(
@@ -435,7 +459,7 @@ namespace UniGame.Runtime.ObjectPool
             for (var i = 0; i < clones.Length; i++)
             {
                 var o = clones.Items[i];
-                allCloneLinks[o] = pool;
+                cloneLinks[o] = pool;
             }
             
             return clones;
@@ -460,7 +484,7 @@ namespace UniGame.Runtime.ObjectPool
         {
             _disposableAction?.Complete();
             
-            var myPools = allSourceLinks
+            var myPools = pools
                 .Where(x => x.Value.owner == LifeTime)
                 .Select(x => x.Value)
                 .ToList();
