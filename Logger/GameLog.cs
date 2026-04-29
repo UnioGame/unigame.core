@@ -16,7 +16,7 @@
             get
             {
                 if(_logger == null)
-                    _logger = new GameLogger("GameLog");
+                    _logger = new GameLogger(string.Empty);
                 return _logger;
             }
 

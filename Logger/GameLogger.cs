@@ -17,7 +17,7 @@
     
     public class GameLogger : IGameLogger
     {
-        private const string NameTemplate = @"[{0} #{1}]:";
+        private const string NameTemplate = @"[{0}]:";
         private const string LogTemplate  = @"{0} :{1} {2}";
 
         private int  _counter;
@@ -223,7 +223,8 @@
 
         private string GetNamePrefix()
         {
-            return Format(NameTemplate, Name, _counter);
+            if(string.IsNullOrEmpty(Name)) return string.Empty;
+            return Format(NameTemplate, Name);
         }
 
         private string GetLogMessageWithPrefix(string message)

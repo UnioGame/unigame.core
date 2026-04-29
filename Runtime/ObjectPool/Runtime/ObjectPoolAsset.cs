@@ -324,7 +324,10 @@ namespace UniGame.Runtime.ObjectPool
             
             //create root
             if (!_poolsRoot)
+            {
                 _poolsRoot = new GameObject(RootObjectName);
+                DontDestroyOnLoad(_poolsRoot);
+            }
 
             // Create a new pool for this prefab?
             var container = new GameObject(targetAsset.name);
