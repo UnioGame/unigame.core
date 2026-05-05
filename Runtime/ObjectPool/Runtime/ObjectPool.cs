@@ -207,8 +207,13 @@ namespace UniGame.Runtime.ObjectPool
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ObjectPoolAsset GetPool()
         {
-            if (activePool) return activePool;
-            activePool = new GameObject(nameof(ObjectPoolAsset)).AddComponent<ObjectPoolAsset>();
+            if (activePool!=null) return activePool;
+
+            var gameObjectTarget = new GameObject(nameof(ObjectPoolAsset));
+            activePool = gameObjectTarget.AddComponent<ObjectPoolAsset>();
+            
+            Object.DontDestroyOnLoad(gameObjectTarget);
+            
             return activePool;
         }
         
