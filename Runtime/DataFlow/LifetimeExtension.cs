@@ -183,7 +183,11 @@ public static class LifetimeExtension
     public static LifeTime AddTo(this LifeTime lifeTimeDefinition, ILifeTime lifeTime)
     {
         if (lifeTime == null)
+        {
+            lifeTimeDefinition.Terminate();
             return lifeTimeDefinition;
+        }
+        
         lifeTime.AddCleanUpAction(lifeTimeDefinition.Terminate);
         return lifeTimeDefinition;
     }
