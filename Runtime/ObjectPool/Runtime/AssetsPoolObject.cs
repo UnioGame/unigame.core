@@ -118,7 +118,9 @@
                 return clone;
             }
 
-            return CreateGameObject(position, rotation, parent, stayWorld);
+            var created = CreateGameObject(position, rotation, parent, stayWorld);
+            created.SetActive(setActive);
+            return created;
         }
         
         // This will return a clone from the cache, or create a new instance
@@ -164,9 +166,8 @@
         public void Despawn(Object clone, bool destroy = false)
         {
             if (!clone) return;
-            
-            if (clone is IPoolable poolable)
-                poolable.Release();
+
+            ObjectPoolData.ReleasePoolable(clone);
 
             var target = clone.GetRootAsset() as GameObject;
             

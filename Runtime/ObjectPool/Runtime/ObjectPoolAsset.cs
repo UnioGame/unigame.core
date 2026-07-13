@@ -397,12 +397,10 @@ namespace UniGame.Runtime.ObjectPool
             // Try and find the pool associated with this clone
             if (!cloneLinks.TryGetValue(clone, out var pool))
             {
+                ObjectPoolData.ReleasePoolable(asset);
                 Destroy(clone);
                 return;
             }
-            
-            if (asset is IPoolable poolable)
-                poolable.Release();
 
             // Remove the association
             cloneLinks.Remove(clone);
