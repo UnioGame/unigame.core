@@ -170,14 +170,7 @@ namespace UniGame.Runtime.Utils
         public static bool IsPrefab(GameObject go)
         {
 
-            if (PrefabUtility.GetPrefabType(go) == PrefabType.Prefab)
-            {
-
-                return true;
-
-            }
-
-            return false;
+            return PrefabUtility.GetPrefabAssetType(go) != PrefabAssetType.NotAPrefab;
 
         }
 
@@ -199,7 +192,17 @@ namespace UniGame.Runtime.Utils
 
             string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/New " + typeof(T).ToString() + ".prefab");
 
-            PrefabUtility.CreatePrefab(assetPathAndName, go, ReplacePrefabOptions.ConnectToPrefab);
+            var prefab = PrefabUtility.SaveAsPrefabAssetAndConnect(
+                go,
+                assetPathAndName,
+                InteractionMode.AutomatedAction,
+                out var success);
+
+            if (!success || prefab == null)
+            {
+                GameObject.DestroyImmediate(go);
+                return null;
+            }
 
             AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(asset));
             //AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
@@ -209,7 +212,7 @@ namespace UniGame.Runtime.Utils
 
             GameObject.DestroyImmediate(go);
 
-            return asset;
+            return prefab.GetComponent<T>();
 
         }
 

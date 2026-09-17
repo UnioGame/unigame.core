@@ -256,7 +256,7 @@
             var asset = GetScriptAsset(type, folders);
             if (asset == null)
                 return false;
-            return AssetDatabase.OpenAsset(asset.GetInstanceID(), 0, 0);
+            return AssetDatabase.OpenAsset(asset, 0, 0);
         }
 
         public static MonoScript GetScriptAsset(this Type type, params string[] folders)

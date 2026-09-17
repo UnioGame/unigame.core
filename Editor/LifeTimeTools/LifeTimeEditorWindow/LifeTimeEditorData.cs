@@ -1,4 +1,4 @@
-﻿#if ODIN_INSPECTOR
+#if ODIN_INSPECTOR
 
 using System;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ namespace UniGame.Context.Editor
         #region indspector
 
         [Searchable]
-        [ListDrawerSettings(Expanded = true)]
+        [ListDrawerSettings(ShowFoldout = true)]
         public List<LifeTimeEditorItem> scriptableLifeTimes = new List<LifeTimeEditorItem>();
 
         #endregion

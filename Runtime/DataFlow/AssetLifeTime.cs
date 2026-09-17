@@ -9,11 +9,17 @@
     using UnityEngine;
     using Object = UnityEngine.Object;
 
+#if UNITY_6000_3_OR_NEWER
+    using ObjectId = UnityEngine.EntityId;
+#else
+    using ObjectId = System.Int32;
+#endif
+
     public static class AssetLifeTime 
     {
         public struct AssetLifeTimeHandle
         {
-            public int id;
+            public ObjectId id;
             public LifeTime lifeTime;
             public bool terminateOnDisable;
             public Object asset;
@@ -21,7 +27,7 @@
         
         public const int DefaultCapacity = 64;
         public static AssetLifeTimeHandle[] assetLifeTimeHandles;
-        public static Dictionary<int, int> lifeTimeMap;
+        public static Dictionary<ObjectId, int> lifeTimeMap;
         public static int[] emptySlots;
         public static int[] lockedSlots;
         public static int assetLifeTimeCount = 0;
@@ -40,7 +46,7 @@
             cancellationSource?.Cancel();
             cancellationSource?.Dispose();
 
-            lifeTimeMap = new Dictionary<int, int>(DefaultCapacity);
+            lifeTimeMap = new Dictionary<ObjectId, int>(DefaultCapacity);
             cancellationSource = new CancellationTokenSource();
             assetLifeTimeHandles = Array.Empty<AssetLifeTimeHandle>();
             emptySlots = Array.Empty<int>();
@@ -85,7 +91,7 @@
                 }
                 
                 ref var handle = ref assetLifeTimeHandles[index];
-                if(handle.id == 0) continue;
+                if(!IsValidId(handle.id)) continue;
                     
                 var asset = handle.asset;
 
@@ -98,7 +104,7 @@
                 lifeTimeMap.Remove(handle.id);
                 handle.lifeTime.Restart();
                 handle.asset = null;
-                handle.id = 0;
+                handle.id = EmptyId;
                 
                 assetLifeTimeCount--;
                 lockedSlots[targetIndex] = -1;
@@ -131,14 +137,14 @@
             {
                 lockedSlots[i] = -1;
                 emptySlots[i] = i;
-                assetLifeTimeHandles[i].id = 0;
+                assetLifeTimeHandles[i].id = EmptyId;
             }
         }
         
         public static ILifeTime GetAssetLifeTime(this Object source,
             bool terminateOnDisable = false)
         {
-            var id = source.GetInstanceID();
+            var id = GetObjectId(source);
             if(lifeTimeMap.TryGetValue(id,out var index))
                 return assetLifeTimeHandles[index].lifeTime;
 
@@ -163,6 +169,36 @@
             assetLifeTimeCount++;
             
             return handle.lifeTime;
+        }
+
+        private static ObjectId GetObjectId(Object source)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return source.GetEntityId();
+#else
+            return source.GetInstanceID();
+#endif
+        }
+
+        private static bool IsValidId(ObjectId id)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return id.IsValid();
+#else
+            return id != 0;
+#endif
+        }
+
+        private static ObjectId EmptyId
+        {
+            get
+            {
+#if UNITY_6000_3_OR_NEWER
+                return UnityEngine.EntityId.None;
+#else
+                return 0;
+#endif
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
