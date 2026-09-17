@@ -296,7 +296,7 @@ namespace UniModules.Runtime.Network
             {
                 error = texture2DResult.error,
                 success = texture2DResult.success,
-                sprite = EmptySprite,
+                sprite = null,
             };
             
             if (!texture2DResult.success) return result;

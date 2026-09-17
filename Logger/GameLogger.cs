@@ -36,7 +36,7 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Log(string message, Object source = null)
         {
-#if UNITY_EDITOR || GAME_LOGS_ENABLED || DEBUG
+#if UNITY_EDITOR || GAME_LOGS_ENABLED || GAME_DEBUG || DEBUG
             LogRuntime(message, source);
 #endif
         }
@@ -50,7 +50,7 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LogFormatWithTrace(string template, params object[] values)
         {
-#if UNITY_EDITOR || GAME_LOGS_ENABLED || DEBUG
+#if UNITY_EDITOR || GAME_LOGS_ENABLED || GAME_DEBUG || DEBUG
 
             LogFormat(template, values);
             LogFormat("Stack Trace {0}", System.Environment.StackTrace);
@@ -61,7 +61,7 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LogFormat(string template, Color color, params object[] values)
         {
-#if UNITY_EDITOR || GAME_LOGS_ENABLED || DEBUG
+#if UNITY_EDITOR || GAME_LOGS_ENABLED || GAME_DEBUG || DEBUG
 
             var message = values == null || values.Length == 0 
                 ? template 
@@ -81,7 +81,7 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LogFormat(string template, params object[] values)
         {
-#if UNITY_EDITOR || GAME_LOGS_ENABLED || DEBUG
+#if UNITY_EDITOR || GAME_LOGS_ENABLED || GAME_DEBUG || DEBUG
             LogFormatRuntime(template, values);
 #endif
         }
@@ -89,7 +89,7 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Log(string message, Color color, Object source = null)
         {
-#if UNITY_EDITOR || GAME_LOGS_ENABLED || DEBUG
+#if UNITY_EDITOR || GAME_LOGS_ENABLED || GAME_DEBUG || DEBUG
             LogRuntime(message, color, source);
 #endif
         }
