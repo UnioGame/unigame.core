@@ -62,7 +62,7 @@
             {
                 UpdateLifeTimes();
 
-                await UniTask.WaitForEndOfFrame();
+                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
             }
         }
 
