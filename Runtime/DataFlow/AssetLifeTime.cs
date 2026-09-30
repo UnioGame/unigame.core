@@ -27,7 +27,15 @@
         public static int assetLifeTimeCount = 0;
         public static CancellationTokenSource cancellationSource;
         
+        // Enter Play Mode without domain reload keeps statics: every session starts with the player loop not ready
+        // (UniTask injects a fresh one at AfterAssembliesLoaded), the loop starts at BeforeSceneLoad
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void OnSubsystemRegistration()
+        {
+            playerLoopReady = false;
+            Reset();
+        }
+
         public static void Reset()
         {
             if (assetLifeTimeHandles != null)
@@ -48,17 +56,37 @@
             assetLifeTimeCount = 0;
 
             ResizeLifeTimes(DefaultCapacity);
-            
-            if(Application.isPlaying)
-                UpdateLifeTimesAsync().Forget();
+
+            // UniTask injects its player loop at AfterAssembliesLoaded, after SubsystemRegistration:
+            // in a player the loop starts from StartUpdateLoop (BeforeSceneLoad), later Resets start it here
+            if (Application.isPlaying && playerLoopReady)
+                StartUpdateLoop();
 
             Application.quitting -= Reset;
             Application.quitting += Reset;
         }
 
-        private static async UniTask UpdateLifeTimesAsync()
+        private static bool playerLoopReady;
+        private static CancellationTokenSource loopSource;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void OnBeforeSceneLoad()
         {
-            while (!cancellationSource.IsCancellationRequested)
+            playerLoopReady = true;
+            if (Application.isPlaying)
+                StartUpdateLoop();
+        }
+
+        private static void StartUpdateLoop()
+        {
+            if (loopSource == cancellationSource) return;
+            loopSource = cancellationSource;
+            UpdateLifeTimesAsync(cancellationSource.Token).Forget();
+        }
+
+        private static async UniTask UpdateLifeTimesAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
             {
                 UpdateLifeTimes();
 
