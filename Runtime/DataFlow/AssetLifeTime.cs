@@ -55,16 +55,27 @@
 
             ResizeLifeTimes(DefaultCapacity);
             
-            if(Application.isPlaying)
-                UpdateLifeTimesAsync().Forget();
-
             Application.quitting -= Reset;
-            Application.quitting += Reset;
+            Application.quitting -= Shutdown;
+            Application.quitting += Shutdown;
         }
 
-        private static async UniTask UpdateLifeTimesAsync()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void StartUpdates()
         {
-            while (!cancellationSource.IsCancellationRequested)
+            UpdateLifeTimesAsync(cancellationSource.Token).Forget();
+        }
+
+        private static void Shutdown()
+        {
+            cancellationSource?.Cancel();
+            foreach (var handle in assetLifeTimeHandles)
+                handle.lifeTime?.Terminate();
+        }
+
+        private static async UniTask UpdateLifeTimesAsync(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
             {
                 UpdateLifeTimes();
 
