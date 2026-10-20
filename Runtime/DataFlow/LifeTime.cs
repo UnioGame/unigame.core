@@ -236,7 +236,7 @@ namespace UniGame.Runtime.DataFlow
                 if (dependencies.Length > 0)
                 {
                     Array.Copy(dependencies, newArray, length);
-                    ReferencePool.Return(dependencies);
+                    ReferencePool.Return(dependencies, clearArray: true);
                 }
                 
                 dependencies = newArray;
@@ -304,7 +304,7 @@ namespace UniGame.Runtime.DataFlow
             }
 #endif
             if(dependencies.Length > 0)
-                ReferencePool.Return(dependencies);
+                ReferencePool.Return(dependencies, clearArray: true);
             
             dependencies = Array.Empty<LifeTimeReference>();
             length = 0;
