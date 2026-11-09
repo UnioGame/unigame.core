@@ -258,15 +258,22 @@ namespace UniModules.Runtime.Network
         }
         
         
-        public async UniTask<WebServerTexture2DResult> GetTextureAsync(string url,Dictionary<string,string> parameters = null)
+        public UniTask<WebServerTexture2DResult> GetTextureAsync(string url, Dictionary<string,string> parameters = null)
+        {
+            return GetTextureAsync(url, true, default, parameters);
+        }
+
+        public async UniTask<WebServerTexture2DResult> GetTextureAsync(string url, bool logErrors,
+            CancellationToken cancellation = default, Dictionary<string,string> parameters = null)
         {
             url = SetParameters(url, parameters);
             
-            var request = UnityWebRequestTexture.GetTexture(url);
+            using var request = UnityWebRequestTexture.GetTexture(url);
+            request.timeout = 30;
             
             SetHeaders(request, null);
             
-            var requestResult = await SendRequestAsync(request,typeof(Texture2D));
+            var requestResult = await SendRequestAsync(request,typeof(Texture2D),cancellation,logErrors);
             
             var result = new WebServerTexture2DResult()
             {
@@ -288,9 +295,15 @@ namespace UniModules.Runtime.Network
             return result;
         }
 
-        public async UniTask<WebServerSpriteResult> GetSpriteAsync(string url,Dictionary<string,string> parameters = null)
+        public UniTask<WebServerSpriteResult> GetSpriteAsync(string url, Dictionary<string,string> parameters = null)
         {
-            var texture2DResult = await GetTextureAsync(url,parameters);
+            return GetSpriteAsync(url, true, default, parameters);
+        }
+
+        public async UniTask<WebServerSpriteResult> GetSpriteAsync(string url, bool logErrors,
+            CancellationToken cancellation = default, Dictionary<string,string> parameters = null)
+        {
+            var texture2DResult = await GetTextureAsync(url,logErrors,cancellation,parameters);
             
             var result = new WebServerSpriteResult()
             {
@@ -319,17 +332,23 @@ namespace UniModules.Runtime.Network
         private async UniTask<WebRequestResult> SendRequestAsync(
             UnityWebRequest request,
             Type targetType,
-            CancellationToken cancellation = default)
+            CancellationToken cancellation = default,
+            bool logErrors = true)
         {
             try
             {
                 var asyncOperation = request.SendWebRequest();
                 request = await asyncOperation.ToUniTask(cancellationToken:cancellation);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 var errorMessage = $"error on web request: {request.url} | {e.Message}";
-                GameLog.LogError( errorMessage);
+                if (logErrors)
+                    GameLog.LogError(errorMessage);
             }
             
             var isSuccessful = request.result == UnityWebRequest.Result.Success;
